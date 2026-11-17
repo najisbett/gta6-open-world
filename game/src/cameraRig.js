@@ -18,6 +18,7 @@ function pullIn(tx, ty, tz, cx, cy, cz) {
 
 export function updateCamera(camera, dt) {
   const c = G.cam;
+  if (G.shot && G.shot.cam) { G.shot.cam(camera, c); return; }
   if (G.mode === 'menu') {
     const a = G.t * 0.06;
     c.x = 384 + Math.cos(a) * 240; c.z = 330 + Math.sin(a) * 240; c.y = 70;
@@ -54,6 +55,7 @@ export function updateCamera(camera, dt) {
     aimBlend += (0 - aimBlend) * (1 - Math.exp(-8 * dt));
   } else {
     const want = player.aiming ? 1 : 0;
+    if (want && !moved) c.pitch += (0.07 - c.pitch) * (1 - Math.exp(-2.5 * dt));
     aimBlend += (want - aimBlend) * (1 - Math.exp(-9 * dt));
     dist = 5.6 - aimBlend * 3.0; height = 1.62;
     tx = player.x + (-Math.cos(c.yaw)) * 0.75 * aimBlend; ty = player.y + height; tz = player.z + Math.sin(c.yaw) * 0.75 * aimBlend;

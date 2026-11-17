@@ -10,7 +10,7 @@ function makeVehicle(i) {
     id: i, active: false, type: 'marlin', t: null, paint: 0, x: 0, y: 0, z: 0, h: 0, vx: 0, vz: 0, yaw: 0, pitch: 0, roll: 0,
     steer: 0, throttle: 0, brake: 0, hb: 0, hp: 100, ai: AI_NONE, driver: 0, ni: 0, nj: 0, dir: 0, stuck: 0, reverse: 0,
     slip: 0, speed: 0, fire: 0, wreck: false, keep: false, tune: 0, lastHit: 0, tmx: 0, tmz: 0, cruise: 0, mission: false,
-    wasOnKerb: false, owned: false, siren: false, boom: 0, tireMarkX: 0, tireMarkZ: 0, hasMark: false, spawnT: 0,
+    wasOnKerb: false, owned: false, gi: 0, gj: 0, route: false, deployed: false, siren: false, boom: 0, tireMarkX: 0, tireMarkZ: 0, hasMark: false, spawnT: 0,
   };
 }
 function makeHuman(i) {
@@ -34,7 +34,7 @@ export const G = {
   ],
   vehicles: Array.from({ length: MAX_VEHICLES }, (_, i) => makeVehicle(i)),
   humans: Array.from({ length: MAX_HUMANS }, (_, i) => makeHuman(i)),
-  wanted: { level: 0, heat: 0, evade: 0, seen: false, flash: 0, copCount: 0, bust: 0 },
+  wanted: { level: 0, heat: 0, evade: 0, seen: false, flash: 0, copCount: 0, bust: 0, lx: 0, lz: 0, spawnCd: 0 },
   mission: { active: -1, step: 0, stepT: 0, done: [], timer: 0, fail: '', collected: 0, kills: 0, started: false },
   garage: { type: 'vesper', paint: 3, tune: 0, saved: false },
   pickups: [],

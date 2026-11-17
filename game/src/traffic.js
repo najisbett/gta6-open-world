@@ -1,7 +1,7 @@
 // traffic.js - civilian cars that follow road lanes, obey traffic signals, brake for cars and people ahead, turn at
 // intersections, and are spawned and retired around the player. Also parks some cars at the kerb to steal.
 import { C, N, DX, DZ, LANE, WORLD } from './config.js';
-import { G, AI_TRAFFIC, AI_PARKED } from './state.js';
+import { G, AI_TRAFFIC, AI_PARKED, AI_POLICE } from './state.js';
 import { spawnVehicle, removeVehicle } from './vehicles.js';
 import { TRAFFIC_TYPES } from './vehicleTypes.js';
 import { signalPhase } from './cityRender.js';
@@ -36,6 +36,18 @@ function laneAhead(v, d) {
 const aim = [0, 0];
 function chooseTurn(v) {
   const opts = [];
+  if (v.ai === AI_POLICE) {
+    // greedy road routing toward the goal node: prefer the axis with the larger remaining distance
+    let best = -1, bs = -1e9;
+    for (let k = 0; k < 4; k++) {
+      if (k === ((v.dir + 2) & 3)) continue;
+      const ni = v.ni + DX[k], nj = v.nj + DZ[k];
+      if (ni < 0 || nj < 0 || ni > N || nj > N) continue;
+      const sc = -(Math.abs(v.gi - ni) + Math.abs(v.gj - nj)) * 10 + (k === v.dir ? 1 : 0) + rand() * 0.5;
+      if (sc > bs) { bs = sc; best = k; }
+    }
+    return best >= 0 ? best : (v.dir + 2) & 3;
+  }
   for (let k = 0; k < 4; k++) {
     if (k === ((v.dir + 2) & 3)) continue;
     const ni = v.ni + DX[k], nj = v.nj + DZ[k];
@@ -46,7 +58,8 @@ function chooseTurn(v) {
   return opts.length ? pick(opts) : (v.dir + 2) & 3;
 }
 
-function steerTraffic(v, dt) {
+function steerAlongRoad(v, dt) {
+  const police = v.ai === AI_POLICE;
   // arrival at the node ahead
   const nx = v.ni * C, nz = v.nj * C;
   const dAhead = (nx - v.x) * DX[v.dir] + (nz - v.z) * DZ[v.dir];
@@ -64,7 +77,7 @@ function steerTraffic(v, dt) {
   const dn = (nodeX - v.x) * DX[v.dir] + (nodeZ - v.z) * DZ[v.dir];
   const ph = signalPhase(G.t);
   const xAxis = DX[v.dir] !== 0;
-  const red = xAxis ? ph !== 0 : ph !== 2;
+  const red = !police && (xAxis ? ph !== 0 : ph !== 2);
   if (red && dn > 9 && dn < 30) target = Math.min(target, Math.max(0, (dn - 9.5) * 0.9));
   // leader: any car, ped or the player's body ahead in a narrow corridor
   const fx = DX[v.dir], fz = DZ[v.dir];
@@ -74,10 +87,10 @@ function steerTraffic(v, dt) {
     if (!o.active || o === v) continue;
     const dx = o.x - v.x, dz = o.z - v.z;
     const along = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx);
-    if (along > 0 && along < 15 && side < 2.6) target = Math.min(target, Math.max(0, (along - 6.5) * 0.8));
+    if (along > 0 && along < (police ? 8 : 15) && side < 2.6) target = Math.min(target, Math.max(0, (along - 6.5) * 0.8));
   }
   const Hs = G.humans;
-  for (let i = 0; i < Hs.length; i++) {
+  for (let i = 0; i < Hs.length && !police; i++) {
     const o = Hs[i];
     if (!o.active || o.state === 3) continue;
     const dx = o.x - v.x, dz = o.z - v.z;
@@ -86,7 +99,8 @@ function steerTraffic(v, dt) {
   }
   // slow for turns
   const err = Math.abs(angleDiff(Math.atan2(aim[0] - v.x, aim[1] - v.z), v.h));
-  target = Math.min(target, 16 - err * 9 > 4 ? 16 - err * 9 : 4);
+  const cap = police ? 36 : 16;
+  target = Math.min(target, Math.max(4, cap - err * 9));
   driveToward(v, aim[0], aim[1], target, dt);
 }
 
@@ -94,7 +108,7 @@ export function stepTraffic(dt) {
   const V = G.vehicles;
   for (let i = 0; i < V.length; i++) {
     const v = V[i];
-    if (v.active && v.ai === AI_TRAFFIC && !v.wreck) steerTraffic(v, dt);
+    if (v.active && !v.wreck && (v.ai === AI_TRAFFIC || (v.ai === AI_POLICE && v.route))) steerAlongRoad(v, dt);
   }
 }
 
@@ -110,7 +124,7 @@ function laneStart(x, z, axis) {
   return clamp(k, 0, N);
 }
 
-function placeTraffic(px, pz, minD, maxD, anywhere) {
+export function placeTraffic(px, pz, minD, maxD, anywhere, type, ai) {
   for (let tries = 0; tries < 14; tries++) {
     const a = rand() * Math.PI * 2, r = minD + rand() * (maxD - minD);
     let x = px + Math.cos(a) * r, z = pz + Math.sin(a) * r;
@@ -129,12 +143,13 @@ function placeTraffic(px, pz, minD, maxD, anywhere) {
     for (const o of G.vehicles) if (o.active && (o.x - x) * (o.x - x) + (o.z - z) * (o.z - z) < 100) { clear = false; break; }
     if (!clear) continue;
     if (!anywhere && (x - G.cam.x) * (x - G.cam.x) + (z - G.cam.z) * (z - G.cam.z) < 80 * 80) continue;
-    const v = spawnVehicle(pick(TRAFFIC_TYPES), x, z, Math.atan2(DX[dir], DZ[dir]), AI_TRAFFIC, randInt(10));
-    if (!v) return;
+    const v = spawnVehicle(type || pick(TRAFFIC_TYPES), x, z, Math.atan2(DX[dir], DZ[dir]), ai || AI_TRAFFIC, randInt(10));
+    if (!v) return null;
     v.dir = dir; v.ni = ci; v.nj = cj;
     v.vx = DX[dir] * v.cruise * 0.7; v.vz = DZ[dir] * v.cruise * 0.7;
-    return;
+    return v;
   }
+  return null;
 }
 
 function placeParked(px, pz, minD, maxD) {

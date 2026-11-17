@@ -16,8 +16,7 @@ import { initHud, updateHud, setHudVisible } from './hud.js';
 import { updateCamera } from './cameraRig.js';
 import { simStep, focus } from './sim.js';
 import { setupShot } from './shots.js';
-import { streamTraffic } from './traffic.js';
-import { streamPeds } from './pedestrians.js';
+import { startNewGame } from './gameFlow.js';
 import { seed } from './rng.js';
 
 const canvas = document.getElementById('view');
@@ -54,8 +53,7 @@ function boot() {
     window.__shotReady = true;
     return;
   }
-  streamTraffic(384, 330, true); streamPeds(384, 330, true);
-  G.mode = 'play';
+  startNewGame();
   startLoop();
 }
 

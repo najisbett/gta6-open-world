@@ -8,6 +8,10 @@ import { stepVehicles } from './vehicles.js';
 import { stepTraffic, streamTraffic } from './traffic.js';
 import { stepPedestrians, streamPeds } from './pedestrians.js';
 import { stepEffects } from './effects.js';
+import { stepCombat } from './combat.js';
+import { stepPolice } from './police.js';
+import { stepGunmen } from './gunmen.js';
+import { stepWanted } from './wanted.js';
 import { stepMissions } from './missions.js';
 import { updateSignalColours } from './cityRender.js';
 import { rand } from './rng.js';
@@ -26,10 +30,14 @@ export function simStep(dt) {
     sampleControls();
     if (G.shot && G.shot.controls) G.shot.controls(K, G.t);
     stepPlayer(dt);
+    stepCombat(dt);
   }
   stepTraffic(dt);
+  const seen = stepPolice(dt);
+  stepGunmen(dt);
   stepPedestrians(dt);
   stepVehicles(dt);
+  stepWanted(dt, seen);
   stepMissions(dt);
   stepEffects(dt);
   if (G.toast.t > 0) G.toast.t -= dt;
