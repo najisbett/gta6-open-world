@@ -1,5 +1,9 @@
 # SALT & NEON - Port Halcyon
 
+[![make.fun · gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01)
+[![rank](https://make.fun/badge/gta6-01/najisbett/gta6-open-world/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard)
+[![reward](https://make.fun/badge/gta6-01/najisbett/gta6-open-world/reward.svg)](https://make.fun/bounty/gta6-01)
+
 An original open-world crime game that runs in a desktop browser from static files (three.js, ES modules, no network, no audio files).
 Play as Juno Reyes, fresh off the ferry in a sun-soaked coastal city: walk and drive through a grid city with traffic, pedestrians and
 signals, steal cars, shoot it out, shake the Port Halcyon PD, and work a six-mission story for Dessa Okoye.
