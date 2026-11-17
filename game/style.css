@@ -55,3 +55,5 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1020; fon
 .shopRow { display: flex; justify-content: space-between; gap: 30px; }
 #screen.wasted h1 { font-size: 120px; background: linear-gradient(#ff8a8a, #b01030); -webkit-background-clip: text; }
 kbd { background: #222a40; border: 1px solid #667; border-radius: 5px; padding: 1px 7px; font-size: 18px; color: #fff; }
+html, body { margin: 0; padding: 0; overflow: hidden; background: #10131a; height: 100%; }
+canvas { display: block; width: 100vw; height: 100dvh; }
