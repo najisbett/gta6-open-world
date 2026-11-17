@@ -36,9 +36,9 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1020; fon
 #speedo small { display: block; font-size: 20px; letter-spacing: 4px; color: var(--teal); font-weight: 800; }
 #crosshair { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid rgba(255, 255, 255, 0.9); border-radius: 50%; display: none; box-shadow: 0 0 4px #000; }
 #crosshair::after { content: ""; position: absolute; left: 8px; top: 8px; width: 2px; height: 2px; background: #ff3b57; }
-#prompt { position: absolute; left: 50%; bottom: 190px; transform: translateX(-50%); font-size: 28px; font-weight: 800; background: var(--panel); padding: 6px 20px; border-radius: 10px; display: none; }
+#prompt { position: absolute; left: 50%; bottom: 236px; transform: translateX(-50%); font-size: 28px; font-weight: 800; background: var(--panel); padding: 6px 20px; border-radius: 10px; display: none; }
 #prompt b { color: #111; background: var(--gold); border-radius: 6px; padding: 0 9px; margin-right: 8px; text-shadow: none; }
-#subtitle { position: absolute; left: 50%; bottom: 48px; transform: translateX(-50%); width: min(780px, 58vw); background: rgba(6, 9, 18, 0.78); border-radius: 12px; padding: 12px 22px 12px; font-size: 25px; line-height: 1.25; display: none; border-left: 5px solid var(--hot); }
+#subtitle { position: absolute; left: 50%; bottom: 112px; transform: translateX(-50%); width: min(780px, 58vw); background: rgba(6, 9, 18, 0.78); border-radius: 12px; padding: 12px 22px 12px; font-size: 25px; line-height: 1.25; display: none; border-left: 5px solid var(--hot); }
 #subtitle b { color: var(--hot); display: block; font-size: 20px; letter-spacing: 3px; text-transform: uppercase; }
 #subtitle em { position: absolute; right: 14px; bottom: 6px; font-size: 13px; color: #9ab; font-style: normal; letter-spacing: 2px; }
 #toast { position: absolute; left: 50%; top: 150px; transform: translateX(-50%); font-size: 34px; font-weight: 900; color: #fff; opacity: 0; transition: opacity 0.25s; text-align: center; }

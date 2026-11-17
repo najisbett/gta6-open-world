@@ -177,8 +177,8 @@ export function buildCityLayout() {
   P.pier = { name: 'Tideline Pier', x: 400, z: WORLD + 52 };
   P.docks = { name: 'Warehouse 9', ...pt(10, 10, 'n', 0.5) };
   P.yard = { name: 'Salt Kings Yard', ...pt(1, 1, 'e', 0.5) };
-  P.carSpot = { name: 'Vesper GT', x: roadCentre(9) + 11.5, z: roadCentre(5) + 14 };
-  P.vanSpot = { name: 'Hauler van', x: roadCentre(11) + 11.5, z: roadCentre(10) - 12 };
+  P.carSpot = { name: 'Vesper GT', x: roadCentre(9) + 6.4, z: roadCentre(5) + 22 };
+  P.vanSpot = { name: 'Hauler van', x: roadCentre(11) + 6.4, z: roadCentre(10) - 22 };
   return city;
 }
 

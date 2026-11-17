@@ -49,6 +49,7 @@ export function updateHud() {
   const hr = Math.floor(G.hour), mn = Math.floor((G.hour - hr) * 60);
   setText('clock', (hr < 10 ? '0' : '') + hr + ':' + (mn < 10 ? '0' : '') + mn);
   setText('place', districtName(p.x, p.z));
+  setShow('place', !G.dialog.active); setShow('clock', !G.dialog.active);
   setText('rank', rankFor(p.xp).name);
   // objective
   const o = G.objective;

@@ -13,6 +13,11 @@ import { stepPolice } from './police.js';
 import { stepGunmen } from './gunmen.js';
 import { stepWanted } from './wanted.js';
 import { stepMissions } from './missions.js';
+import { stepActivities } from './activities.js';
+import { stepPickups } from './pickups.js';
+import { stepShops } from './shops.js';
+import { dialogBusy } from './dialogue.js';
+import { respawnPlayer } from './player.js';
 import { updateSignalColours } from './cityRender.js';
 import { rand } from './rng.js';
 
@@ -29,8 +34,17 @@ export function simStep(dt) {
   if (G.mode === 'play') {
     sampleControls();
     if (G.shot && G.shot.controls) G.shot.controls(K, G.t);
-    stepPlayer(dt);
-    stepCombat(dt);
+    stepMissions(dt);
+    stepActivities(dt);
+    stepPickups(dt);
+    stepShops();
+    if (!dialogBusy()) { stepPlayer(dt); stepCombat(dt); }
+  } else {
+    stepMissions(dt);
+    if (G.mode === 'dead') {
+      player.deadT = (player.deadT || 0) + dt;
+      if (player.deadT > 3.4) respawnPlayer();
+    }
   }
   stepTraffic(dt);
   const seen = stepPolice(dt);
@@ -38,7 +52,6 @@ export function simStep(dt) {
   stepPedestrians(dt);
   stepVehicles(dt);
   stepWanted(dt, seen);
-  stepMissions(dt);
   stepEffects(dt);
   if (G.toast.t > 0) G.toast.t -= dt;
   streamClock += dt;

@@ -1,7 +1,7 @@
 // pedestrians.js - civilians who stroll round block sidewalks, wait for the signal before crossing, flee from danger,
 // get hit by cars, and are spawned and retired around the player. Also shared body upkeep for any dead human.
 import { C, N, DX, DZ } from './config.js';
-import { G, H_PED, S_WALK, S_FLEE, S_DEAD } from './state.js';
+import { G, H_PED, S_WALK, S_FLEE, S_DEAD, S_IDLE } from './state.js';
 import { city } from './cityLayout.js';
 import { signalPhase } from './cityRender.js';
 import { pushOutCircle } from './collision.js';
@@ -74,6 +74,7 @@ export function scarePeds(x, z, r) {
 
 function stepPed(h, dt) {
   h.y += (0.22 - h.y) * Math.min(1, dt * 10);
+  if (h.state === S_IDLE) return;
   if (h.state === S_FLEE) {
     h.panic -= dt;
     const l = Math.sqrt(h.fx * h.fx + h.fz * h.fz) || 1;
@@ -163,4 +164,9 @@ export function streamPeds(px, pz, filling) {
     const d2 = (h.x - px) * (h.x - px) + (h.z - pz) * (h.z - pz);
     if (d2 > 160 * 160) h.active = false;
   }
+}
+
+// Scatter n extra pedestrians between two radii (used for crowded scenes and shot scenes).
+export function crowdAround(px, pz, n, minD, maxD) {
+  for (let i = 0; i < n; i++) placePed(px, pz, minD, maxD, true);
 }

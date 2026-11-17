@@ -16,7 +16,11 @@ import { initHud, updateHud, setHudVisible } from './hud.js';
 import { updateCamera } from './cameraRig.js';
 import { simStep, focus } from './sim.js';
 import { setupShot } from './shots.js';
-import { startNewGame } from './gameFlow.js';
+import { hasSave } from './save.js';
+import { showTitle, showPause, stepMenus } from './menus.js';
+import { updateAudio, bindAudioEvents, initAudio } from './audio.js';
+import { streamTraffic } from './traffic.js';
+import { streamPeds } from './pedestrians.js';
 import { seed } from './rng.js';
 
 const canvas = document.getElementById('view');
@@ -53,7 +57,12 @@ function boot() {
     window.__shotReady = true;
     return;
   }
-  startNewGame();
+  bindAudioEvents();
+  streamTraffic(384, 330, true); streamPeds(384, 330, true);
+  G.menu.hasSave = hasSave();
+  showTitle();
+  canvas.addEventListener('click', () => { initAudio(); if (G.mode === 'play' && !document.pointerLockElement && canvas.requestPointerLock) { try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch { /* denied */ } } });
+  document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && G.mode === 'play') showPause(); });
   startLoop();
 }
 
@@ -64,6 +73,7 @@ function renderFrame(dt) {
   syncVehicleViews(G.t);
   syncHumanViews();
   syncMarkerViews(G.t);
+  setHudVisible(G.mode !== 'menu');
   updateHud();
   renderer.render(scene, camera);
 }
@@ -79,6 +89,8 @@ function startLoop() {
     let n = 0;
     while (acc >= STEP && n < 5) { simStep(STEP); acc -= STEP; n++; }
     if (n === 5) acc = 0;
+    stepMenus();
+    updateAudio();
     renderFrame(dt);
   };
   requestAnimationFrame(frame);

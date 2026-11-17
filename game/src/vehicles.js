@@ -14,7 +14,16 @@ const _p = { x: 0, z: 0 };
 export function spawnVehicle(type, x, z, h, ai, paint) {
   let v = null;
   for (let i = 0; i < G.vehicles.length; i++) if (!G.vehicles[i].active) { v = G.vehicles[i]; break; }
-  if (!v) return null;
+  if (!v) {
+    // pool full: recycle the farthest ordinary car so story cars and police always get a slot
+    let far = -1;
+    for (const o of G.vehicles) {
+      if (o.keep || o.mission || o.driver === 1) continue;
+      const d = (o.x - G.player.x) * (o.x - G.player.x) + (o.z - G.player.z) * (o.z - G.player.z);
+      if (d > far) { far = d; v = o; }
+    }
+    if (!v) return null;
+  }
   const t = VTYPES[type];
   v.active = true; v.type = type; v.t = t; v.paint = paint; v.x = x; v.z = z; v.y = groundHeight(x, z); v.h = h;
   v.vx = v.vz = v.yaw = v.pitch = v.roll = 0; v.steer = v.throttle = v.brake = v.hb = 0; v.hp = t.hp; v.ai = ai; v.driver = ai === AI_NONE || ai === AI_PARKED ? 0 : 2;

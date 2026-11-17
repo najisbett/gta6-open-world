@@ -33,7 +33,7 @@ for (let i = 0; i < 80; i++) { const r = await send('Runtime.evaluate', { expres
 for (const e of exprs) {
   if (e.startsWith('shot:')) { const r = await send('Page.captureScreenshot', { format: 'jpeg', quality: 80 }); writeFileSync(e.slice(5), Buffer.from(r.result.data, 'base64')); console.log('shot', e.slice(5)); continue; }
   const r = await send('Runtime.evaluate', { expression: `(async()=>{ ${e} })()`, awaitPromise: true, returnByValue: true });
-  console.log(JSON.stringify(r.result.result.value ?? r.result.exceptionDetails ?? r.result));
+  console.log(JSON.stringify(r.result.result.value ?? r.result.exceptionDetails ?? r));
 }
 for (const l of logs.slice(0, 25)) console.log(l);
 ws.close(); chrome.kill(); server.kill(); process.exit(0);
