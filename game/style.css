@@ -1,0 +1,57 @@
+/* style.css - HUD, dialogue, menus and overlays for Salt & Neon. Big type so it still reads at 768 px wide. */
+:root { --ink: #fff; --panel: rgba(8, 12, 22, 0.58); --hot: #ff4d79; --gold: #ffd24a; --teal: #38e8d0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1020; font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; color: var(--ink); user-select: none; }
+#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#hud { position: fixed; inset: 0; pointer-events: none; text-shadow: 0 2px 4px #000, 0 0 2px #000; }
+#hud.off { display: none; }
+#topRight { position: absolute; right: 26px; top: 18px; text-align: right; }
+#money { font-size: 46px; font-weight: 900; color: #7dff8a; letter-spacing: 1px; font-family: Impact, "Arial Black", sans-serif; }
+#stars { font-size: 46px; line-height: 46px; letter-spacing: 3px; }
+#stars span { color: rgba(255, 255, 255, 0.22); }
+#stars span.on { color: var(--gold); text-shadow: 0 0 10px #ff9a00, 0 2px 3px #000; }
+#stars.flash span.on { animation: blink 0.5s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0.2; } }
+#weapon { margin-top: 8px; font-size: 24px; background: var(--panel); padding: 6px 14px; border-radius: 10px; display: inline-block; }
+#ammo { color: var(--gold); font-weight: 800; margin-left: 8px; }
+#objective { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); min-width: 420px; max-width: 560px; text-align: center; background: var(--panel); border-radius: 12px; padding: 8px 18px; border-bottom: 3px solid var(--gold); }
+#objective.hidden { display: none; }
+#objTitle { font-size: 17px; color: var(--gold); letter-spacing: 3px; font-weight: 800; text-transform: uppercase; }
+#objText { font-size: 26px; font-weight: 700; }
+#objTimer { font-size: 24px; color: var(--teal); font-weight: 800; }
+#place { position: absolute; left: 252px; bottom: 120px; font-size: 22px; color: #e8f6ff; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
+#clock { position: absolute; left: 252px; bottom: 150px; font-size: 22px; color: var(--teal); font-weight: 800; }
+#minimapWrap { position: absolute; left: 24px; bottom: 24px; width: 220px; height: 220px; border-radius: 50%; border: 5px solid #f4f1e8; box-shadow: 0 0 0 3px #0b1020, 0 6px 18px rgba(0, 0, 0, 0.6); overflow: hidden; background: #16253a; }
+#minimap { width: 100%; height: 100%; display: block; }
+#compass { position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 900; font-size: 15px; color: #ff6b6b; }
+#bars { position: absolute; left: 252px; bottom: 30px; width: 290px; }
+.bar { position: relative; height: 26px; border-radius: 8px; background: rgba(0, 0, 0, 0.6); overflow: hidden; margin-bottom: 6px; border: 2px solid rgba(255, 255, 255, 0.5); }
+.bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(#ff6b6b, #c71f3a); width: 100%; }
+#armBar { height: 14px; } #armFill { background: linear-gradient(#6ec8ff, #2a73d9); width: 0; }
+#hpText { position: absolute; left: 10px; top: 0; font-size: 18px; font-weight: 800; line-height: 22px; }
+#rank { font-size: 18px; color: #cfe; letter-spacing: 3px; font-weight: 800; }
+#speedo { position: absolute; right: 30px; bottom: 26px; text-align: right; }
+#speedo.hidden { display: none; }
+#speedNum { font-family: Impact, "Arial Black", sans-serif; font-size: 78px; line-height: 70px; color: #fff; }
+#speedo small { display: block; font-size: 20px; letter-spacing: 4px; color: var(--teal); font-weight: 800; }
+#crosshair { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid rgba(255, 255, 255, 0.9); border-radius: 50%; display: none; box-shadow: 0 0 4px #000; }
+#crosshair::after { content: ""; position: absolute; left: 8px; top: 8px; width: 2px; height: 2px; background: #ff3b57; }
+#prompt { position: absolute; left: 50%; bottom: 190px; transform: translateX(-50%); font-size: 28px; font-weight: 800; background: var(--panel); padding: 6px 20px; border-radius: 10px; display: none; }
+#prompt b { color: #111; background: var(--gold); border-radius: 6px; padding: 0 9px; margin-right: 8px; text-shadow: none; }
+#subtitle { position: absolute; left: 50%; bottom: 48px; transform: translateX(-50%); width: min(780px, 58vw); background: rgba(6, 9, 18, 0.78); border-radius: 12px; padding: 12px 22px 12px; font-size: 25px; line-height: 1.25; display: none; border-left: 5px solid var(--hot); }
+#subtitle b { color: var(--hot); display: block; font-size: 20px; letter-spacing: 3px; text-transform: uppercase; }
+#subtitle em { position: absolute; right: 14px; bottom: 6px; font-size: 13px; color: #9ab; font-style: normal; letter-spacing: 2px; }
+#toast { position: absolute; left: 50%; top: 150px; transform: translateX(-50%); font-size: 34px; font-weight: 900; color: #fff; opacity: 0; transition: opacity 0.25s; text-align: center; }
+#toast.on { opacity: 1; }
+#hurt { position: absolute; inset: 0; background: radial-gradient(transparent 45%, rgba(220, 20, 40, 0.65)); opacity: 0; }
+#screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 60%, rgba(255, 120, 90, 0.18), rgba(5, 8, 20, 0.8)); text-align: center; z-index: 5; }
+#screen.hidden { display: none; }
+#screen h1 { font-family: Impact, "Arial Black", sans-serif; font-size: 108px; margin: 0; letter-spacing: 6px; background: linear-gradient(#ffe38a, #ff4d79 55%, #7a3cff); -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 #000); }
+#screen h2 { margin: 0 0 14px; font-size: 40px; letter-spacing: 6px; color: var(--gold); }
+#screen p { max-width: 720px; font-size: 20px; color: #cfe3f2; margin: 6px 0; line-height: 1.4; }
+.btn { pointer-events: auto; cursor: pointer; display: block; margin: 8px auto; min-width: 320px; padding: 12px 28px; font-size: 26px; font-weight: 800; letter-spacing: 3px; color: #fff; background: rgba(20, 26, 48, 0.85); border: 2px solid rgba(255, 255, 255, 0.35); border-radius: 12px; }
+.btn:hover, .btn.sel { background: var(--hot); border-color: #fff; }
+.btn small { display: block; font-size: 14px; letter-spacing: 1px; color: #d8e6f2; }
+.shopRow { display: flex; justify-content: space-between; gap: 30px; }
+#screen.wasted h1 { font-size: 120px; background: linear-gradient(#ff8a8a, #b01030); -webkit-background-clip: text; }
+kbd { background: #222a40; border: 1px solid #667; border-radius: 5px; padding: 1px 7px; font-size: 18px; color: #fff; }

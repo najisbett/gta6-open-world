@@ -1,0 +1,53 @@
+// sim.js - one fixed simulation step (1/60 s): samples controls, runs every system in a fixed order, keeps the
+// traffic and crowd streamed around the player, and advances the clock and weather. No rendering happens here.
+import { G, player } from './state.js';
+import { STEP } from './config.js';
+import { sampleControls, K } from './input.js';
+import { stepPlayer } from './player.js';
+import { stepVehicles } from './vehicles.js';
+import { stepTraffic, streamTraffic } from './traffic.js';
+import { stepPedestrians, streamPeds } from './pedestrians.js';
+import { stepEffects } from './effects.js';
+import { stepMissions } from './missions.js';
+import { updateSignalColours } from './cityRender.js';
+import { rand } from './rng.js';
+
+let streamClock = 0;
+export const focus = { x: 384, z: 330 };
+
+export function simStep(dt) {
+  if (G.mode === 'pause' || G.mode === 'shop') return;
+  G.t += dt;
+  if (G.mode === 'play' || G.mode === 'dead') {
+    G.stats.playTime += dt;
+    focus.x = player.x; focus.z = player.z;
+  } else { focus.x = 384; focus.z = 330; }
+  if (G.mode === 'play') {
+    sampleControls();
+    if (G.shot && G.shot.controls) G.shot.controls(K, G.t);
+    stepPlayer(dt);
+  }
+  stepTraffic(dt);
+  stepPedestrians(dt);
+  stepVehicles(dt);
+  stepMissions(dt);
+  stepEffects(dt);
+  if (G.toast.t > 0) G.toast.t -= dt;
+  streamClock += dt;
+  if (streamClock > 0.5) {
+    streamClock = 0;
+    streamTraffic(focus.x, focus.z, false);
+    streamPeds(focus.x, focus.z, false);
+  }
+  if (!G.shot) {
+    G.hour = (G.hour + dt / 36) % 24;
+    G.weatherTimer -= dt;
+    if (G.weatherTimer <= 0) { G.rainTarget = G.rainTarget > 0 ? 0 : (rand() < 0.35 ? 0.4 + rand() * 0.6 : 0); G.weatherTimer = 70 + rand() * 120; }
+    G.rain += (G.rainTarget - G.rain) * Math.min(1, dt * 0.25);
+  }
+  updateSignalColours(G.t);
+}
+
+export function runSteps(n) {
+  for (let i = 0; i < n; i++) simStep(STEP);
+}

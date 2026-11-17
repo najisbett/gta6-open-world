@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SALT &amp; NEON - Port Halcyon</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="hud">
+  <div id="topRight">
+    <div id="money">$0</div>
+    <div id="stars"><span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span>&#9733;</span></div>
+    <div id="weapon"><b id="weaponName">Fists</b> <span id="ammo"></span></div>
+  </div>
+  <div id="objective"><div id="objTitle"></div><div id="objText"></div><div id="objTimer"></div></div>
+  <div id="place"></div>
+  <div id="clock">12:00</div>
+  <div id="minimapWrap"><canvas id="minimap" width="440" height="440"></canvas><div id="compass">N</div></div>
+  <div id="bars"><div class="bar" id="hpBar"><i id="hpFill"></i><span id="hpText">100</span></div><div class="bar" id="armBar"><i id="armFill"></i></div><div id="rank">RUNNER</div></div>
+  <div id="speedo"><b id="speedNum">0</b><small>KM/H</small></div>
+  <div id="crosshair"></div>
+  <div id="prompt"></div>
+  <div id="subtitle"><b id="subWho"></b><span id="subText"></span><em id="subHint">ENTER</em></div>
+  <div id="toast"></div>
+  <div id="hurt"></div>
+</div>
+<div id="screen" class="hidden"></div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
