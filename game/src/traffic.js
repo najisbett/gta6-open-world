@@ -5,6 +5,7 @@ import { G, AI_TRAFFIC, AI_PARKED, AI_POLICE } from './state.js';
 import { spawnVehicle, removeVehicle } from './vehicles.js';
 import { TRAFFIC_TYPES } from './vehicleTypes.js';
 import { signalPhase } from './cityRender.js';
+import { decor } from './streetDecor.js';
 import { rand, randInt, pick } from './rng.js';
 import { clamp, angleDiff } from './mathUtil.js';
 
@@ -166,6 +167,7 @@ function placeParked(px, pz, minD, maxD) {
     if ((axis === 0 && (rx < 14 || rx > C - 14)) || (axis === 1 && (rz < 14 || rz > C - 14))) continue;
     let clear = true;
     for (const o of G.vehicles) if (o.active && (o.x - x) * (o.x - x) + (o.z - z) * (o.z - z) < 36) { clear = false; break; }
+    for (const p of decor.parked) if ((p.x - x) * (p.x - x) + (p.z - z) * (p.z - z) < 36) { clear = false; break; }
     if (!clear) continue;
     const v = spawnVehicle(pick(TRAFFIC_TYPES), x, z, h, AI_PARKED, randInt(10));
     if (v) v.driver = 0;

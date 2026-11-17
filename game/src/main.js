@@ -5,6 +5,7 @@ import { G } from './state.js';
 import { STEP } from './config.js';
 import { buildCityLayout } from './cityLayout.js';
 import { buildCityMeshes } from './cityRender.js';
+import { buildStreetDecor } from './streetDecor.js';
 import { createSky, updateSky } from './skyLighting.js';
 import { buildModels } from './vehicleModels.js';
 import { createVehicleViews, syncVehicleViews } from './vehicleViews.js';
@@ -43,6 +44,7 @@ function boot() {
   buildCityLayout();
   buildModels();
   buildCityMeshes(scene);
+  buildStreetDecor(scene);
   createSky(scene, renderer);
   createVehicleViews(scene);
   createHumanoidViews(scene);
@@ -98,5 +100,5 @@ function startLoop() {
   requestAnimationFrame(frame);
 }
 
-window.__game = { G, simStep, renderFrame, focus, setHudVisible };
+window.__game = { G, simStep, renderFrame, focus, setHudVisible, renderer, scene, camera };
 try { boot(); } catch (e) { document.title = 'ERR ' + e.message; console.error(e); window.__bootError = String(e.stack || e); }
