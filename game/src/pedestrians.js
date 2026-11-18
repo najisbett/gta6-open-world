@@ -9,13 +9,30 @@ import { setHumanColors } from './humanoidView.js';
 import { hurtHuman } from './humanDamage.js';
 import { rand, randInt, pick } from './rng.js';
 import { clamp, angleDiff, wrapAngle } from './mathUtil.js';
+import { on } from './events.js';
 
 const MAX_PEDS = 44;
 const SHIRTS = [0xe4572e, 0xf3a712, 0x29b6a8, 0x4a7fd4, 0xf2e9e4, 0xd96fa8, 0x7ac74f, 0xffd166, 0x8e6bd8, 0x303744];
 const PANTS = [0x2b3a55, 0x4a4a52, 0xc2b280, 0x1f1f24, 0x7a5c44, 0x3e6a8a];
 const SKINS = [0xf1c9a5, 0xd9a07a, 0xb97a56, 0x8a5a3c, 0x5f3b2a];
 const HAIRS = [0x1d1511, 0x4a2f1c, 0xb98a4b, 0x222222, 0x8a8a8a];
+// Body palettes per pedestrian group (chosen by the district they spawn in): [shirt, pants] pairs.
+const GROUP_PALETTES = {
+  office: [[0xf2f2f2, 0x1f1f24], [0x9fb8d6, 0x2b3a55], [0x303744, 0x4a4a52], [0xe8dcc8, 0x3a3a40]],
+  casual: [[0xe4572e, 0x3e6a8a], [0x7ac74f, 0xc2b280], [0x8e6bd8, 0x2b3a55], [0xf3a712, 0x4a4a52]],
+  leisure: [[0xffd166, 0xf2e9e4], [0x29b6a8, 0xe9d8a6], [0xd96fa8, 0x5fa8d3], [0xff8c42, 0x2e86ab]],
+  worker: [[0xff7f11, 0x2f3e46], [0xf0e14a, 0x3e4a52], [0x4d6a8a, 0x7a5c44], [0x6b6b5e, 0x1f2a30]],
+};
+const DISTRICT_GROUP = { downtown: 'office', mid: 'casual', resid: 'casual', beach: 'leisure', park: 'leisure', industrial: 'worker', port: 'worker' };
+// Two walking gaits: strollers and brisk walkers.
+const GAIT_SLOW = 1.05, GAIT_BRISK = 1.85;
+const GUNFIRE_SCARE_R = 32;
 const _o = { x: 0, z: 0 };
+
+function applyGroupPalette(h, blkType) {
+  const pal = pick(GROUP_PALETTES[DISTRICT_GROUP[blkType]] || GROUP_PALETTES.casual);
+  setHumanColors(h.id + 1, pal[0], pal[1], pick(SKINS), pick(HAIRS));
+}
 
 function cornerPos(blk, k, off, out) {
   const o = 0.9 + off;
@@ -34,7 +51,9 @@ function spawnPed(x, z, blk, k) {
     if (h.active) continue;
     resetHumanSlot(h, H_PED);
     h.off = rand() * 1.1; h.bi = blk.bi; h.bj = blk.bj; h.corner = k; h.cdir = rand() < 0.5 ? 1 : -1;
-    h.speed = 1.2 + rand() * 0.5; h.x = x; h.z = z; h.cash = rand() < 0.5 ? 8 + randInt(40) : 0;
+    applyGroupPalette(h, blk.type);
+    h.brisk = rand() < 0.4;
+    h.speed = (h.brisk ? GAIT_BRISK : GAIT_SLOW) + rand() * 0.15; h.x = x; h.z = z; h.cash = rand() < 0.5 ? 8 + randInt(40) : 0;
     h.hp = h.hpMax = 30;
     return h;
   }
@@ -68,9 +87,12 @@ export function scarePeds(x, z, r) {
   for (const h of G.humans) {
     if (!h.active || h.kind !== H_PED || h.state === S_DEAD) continue;
     const d2 = (h.x - x) * (h.x - x) + (h.z - z) * (h.z - z);
-    if (d2 < r * r) { h.state = S_FLEE; h.panic = 5 + rand() * 3; h.fx = h.x - x; h.fz = h.z - z; }
+    if (d2 < r * r) { h.state = S_FLEE; h.timer = 0; h.panic = 5 + rand() * 3; h.fx = h.x - x + (rand() - 0.5) * 0.5; h.fz = h.z - z + (rand() - 0.5) * 0.5; }
   }
 }
+
+// Any gunshot in the world (player, cops, gang members) sends nearby civilians running away from the shooter.
+on('gunshot', (x, z) => scarePeds(x, z, GUNFIRE_SCARE_R));
 
 function stepPed(h, dt) {
   h.y += (0.22 - h.y) * Math.min(1, dt * 10);
@@ -78,7 +100,8 @@ function stepPed(h, dt) {
   if (h.state === S_FLEE) {
     h.panic -= dt;
     const l = Math.sqrt(h.fx * h.fx + h.fz * h.fz) || 1;
-    h.vx = h.fx / l * 4.6; h.vz = h.fz / l * 4.6;
+    const fs = h.brisk ? 5.1 : 4.4;
+    h.vx = h.fx / l * fs; h.vz = h.fz / l * fs;
     h.x += h.vx * dt; h.z += h.vz * dt; h.walk += dt * 14;
     h.h = Math.atan2(h.vx, h.vz);
     _o.x = h.x; _o.z = h.z;
