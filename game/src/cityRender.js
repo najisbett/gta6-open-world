@@ -21,6 +21,46 @@ function addPalm(b, p) {
   b.box(topX, topY - 0.1, p.z, 0.55 * s, 0.5 * s, 0.55 * s, 0x6b4a2e);
 }
 
+// ---- facade variation: everything below is a pure function of the building index, so the same seed gives the
+// same city every run. The window texture holds a 4x4 grid of bays per repeat; we rescale world-space UVs so each
+// building gets its own storey height (and so storey count) and bay width, and pick a roofline per building.
+function hashIdx(i, salt) {
+  let h = Math.imul(i + 1, 0x9e3779b1) ^ Math.imul(salt + 7, 0x85ebca6b);
+  h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; h = Math.imul(h, 0x297a2d39); h ^= h >>> 15;
+  return h >>> 0;
+}
+const STOREY_H = [3.3, 3.7, 4.1, 4.6, 5.2];
+const BAY_W = [2.6, 3.2, 3.8, 4.5, 5.4];
+const ROOF_TALL = 5, ROOF_HOUSE = 3, ROOF_SHED = 3;
+// Pick an option from n for building i, never repeating the previous building's pick on the same channel.
+function pickNo(i, salt, n, prev) {
+  let k = hashIdx(i, salt) % n;
+  if (k === prev) k = (k + 1 + (hashIdx(i, salt + 101) % (n - 1))) % n;
+  return k;
+}
+const _shade = new THREE.Color();
+function shade(hex, f) { _shade.setHex(hex).multiplyScalar(f); return _shade.getHex(); }
+
+// A box whose side UVs map one texture repeat to (4*bay) horizontally and (4*storey) vertically, starting at a
+// storey line at ground level and offset sideways by ou repeats.
+function facadeBox(b, cx, cy, cz, sx, sy, sz, color, bay, storey, ou) {
+  const start = b.uv.length;
+  b.box(cx, cy, cz, sx, sy, sz, color, { tile: 1 });
+  const tu = 4 * bay, tv = 4 * storey;
+  for (let v = 0; v < 24; v++) {
+    if (v >= 8 && v < 16) continue; // top and bottom faces keep the solid corner sample
+    const a = start + v * 2;
+    b.uv[a] = b.uv[a] / tu + ou;
+    b.uv[a + 1] = (b.uv[a + 1] - KERB_H) / tv;
+  }
+}
+function parapet(bb, cx, cz, w, d, y, ht, t, color) {
+  bb.box(cx, y + ht / 2, cz - d / 2 + t / 2, w, ht, t, color);
+  bb.box(cx, y + ht / 2, cz + d / 2 - t / 2, w, ht, t, color);
+  bb.box(cx - w / 2 + t / 2, y + ht / 2, cz, t, ht, d - 2 * t, color);
+  bb.box(cx + w / 2 - t / 2, y + ht / 2, cz, t, ht, d - 2 * t, color);
+}
+
 export function buildCityMeshes(scene) {
   const win = makeWindowTextures();
   const group = new THREE.Group();
@@ -77,20 +117,76 @@ export function buildCityMeshes(scene) {
 
   // ---- buildings
   const bb = new MeshBuilder();
-  for (const b of city.buildings) {
+  // Collision uses b.h, so the main body keeps its height; storeys, bays and roof furniture vary on top of it.
+  let prevS = -1, prevB = -1, prevR = -1;
+  city.buildings.forEach((b, i) => {
     const w = b.x1 - b.x0, d = b.z1 - b.z0;
+    const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2, top = b.h + KERB_H;
     const textured = b.kind !== 'container' && b.kind !== 'hut';
-    bb.box((b.x0 + b.x1) / 2, b.h / 2 + KERB_H, (b.z0 + b.z1) / 2, w, b.h, d, b.color, textured ? { tile: 16 } : { tile: 400 });
-    if (b.kind === 'office' || b.kind === 'mid' || b.kind === 'tower') {
-      bb.box((b.x0 + b.x1) / 2 + 2, b.h + KERB_H + 0.9, (b.z0 + b.z1) / 2, 4, 1.8, 3, 0x9a9a9a);
-      if (b.kind === 'tower') bb.box((b.x0 + b.x1) / 2 - 3, b.h + KERB_H + 2.5, (b.z0 + b.z1) / 2, 1, 5, 1, 0xdddddd);
+    if (!textured) { bb.box(cx, b.h / 2 + KERB_H, cz, w, b.h, d, b.color, { tile: 400 }); return; }
+    const sI = pickNo(i, 1, STOREY_H.length, prevS), bI = pickNo(i, 2, BAY_W.length, prevB);
+    prevS = sI; prevB = bI;
+    // whole number of storeys that fill the body exactly, so the top floor never gets cut mid-window
+    const storeys = Math.max(1, Math.round(b.h / STOREY_H[sI]));
+    const storey = b.h / storeys, bay = BAY_W[bI], ou = (hashIdx(i, 3) % 4) / 4;
+    facadeBox(bb, cx, b.h / 2 + KERB_H, cz, w, b.h, d, b.color, bay, storey, ou);
+    const rim = shade(b.color, 0.78);
+    const tall = b.kind === 'office' || b.kind === 'mid' || b.kind === 'tower';
+    if (tall) {
+      const r = b.crown ? 0 : pickNo(i, 4, ROOF_TALL, prevR); prevR = r;
+      const acX = ((hashIdx(i, 5) % 5) - 2) * w * 0.12, acZ = ((hashIdx(i, 6) % 5) - 2) * d * 0.12;
+      if (r === 0 || r === 3) parapet(bb, cx, cz, w, d, top, r === 0 ? 0.8 : 1.6, 0.35, rim);
+      if (r === 1 || r === 2) {
+        // setback tiers: one or two smaller blocks carrying the same facade rhythm
+        const tiers = r === 1 ? 1 : 2;
+        let tw = w, td = d, y = top;
+        for (let t = 0; t < tiers; t++) {
+          tw *= 0.62 + (hashIdx(i, 10 + t) % 4) * 0.06; td *= 0.62 + (hashIdx(i, 20 + t) % 4) * 0.06;
+          const n = 1 + (hashIdx(i, 30 + t) % 3), th = n * storey;
+          facadeBox(bb, cx, y + th / 2, cz, tw, th, td, shade(b.color, 0.94 - t * 0.06), bay, storey, ou);
+          y += th;
+        }
+        bb.box(cx + acX * 0.4, y + 0.6, cz + acZ * 0.4, Math.min(3, tw * 0.4), 1.2, Math.min(2.4, td * 0.4), 0x9a9a9a);
+      } else if (r === 4) {
+        // plant-room box off-centre plus a cornice band
+        bb.box(cx, top + 0.25, cz, w + 0.6, 0.5, d + 0.6, rim);
+        bb.box(cx + acX, top + 0.5 + storey * 0.5, cz + acZ, w * 0.35, storey, d * 0.3, shade(b.color, 0.7));
+      } else {
+        bb.box(cx + acX, top + 0.9, cz + acZ, 4, 1.8, 3, 0x9a9a9a);
+      }
+      if (b.kind === 'tower' && !b.crown) {
+        const mh = 3 + (hashIdx(i, 7) % 4) * 2;
+        bb.box(cx - acX - 3 * Math.sign(acX || 1), top + mh / 2, cz - acZ, 1, mh, 1, 0xdddddd);
+      }
+    } else if (b.kind === 'house') {
+      const r = pickNo(i, 8, ROOF_HOUSE, prevR); prevR = r;
+      const roofCol = hashIdx(i, 9) % 2 ? 0xfaf3e6 : shade(b.color, 0.85);
+      if (r === 0) bb.box(cx, top + 0.5, cz, w + 0.8, 1, d + 0.8, roofCol);
+      else if (r === 1) {
+        // stepped hip: three shrinking slabs
+        for (let k = 0; k < 3; k++) bb.box(cx, top + 0.3 + k * 0.6, cz, w + 0.8 - k * w * 0.28, 0.6, d + 0.8 - k * d * 0.28, shade(roofCol, 1 - k * 0.06));
+      } else {
+        parapet(bb, cx, cz, w, d, top, 0.7, 0.3, rim);
+        bb.box(cx + w * 0.2, top + 0.6, cz - d * 0.2, Math.min(2.5, w * 0.3), 1.2, Math.min(2.5, d * 0.3), roofCol);
+      }
+    } else if (b.kind === 'warehouse') {
+      const r = pickNo(i, 11, ROOF_SHED, prevR); prevR = r;
+      if (r === 0) parapet(bb, cx, cz, w, d, top, 1.0, 0.4, rim);
+      else {
+        // sawtooth / ridge vents along the long axis, count varied by index
+        const n = 3 + (hashIdx(i, 12) % 4), alongX = w >= d, span = alongX ? w : d;
+        for (let k = 0; k < n; k++) {
+          const o = -span / 2 + (k + 0.5) * span / n;
+          if (alongX) bb.box(cx + o, top + 0.7, cz, span / n * 0.55, 1.4, d * 0.9, r === 1 ? rim : 0xa8b0b4, { rx: 0.35 });
+          else bb.box(cx, top + 0.7, cz + o, w * 0.9, 1.4, span / n * 0.55, r === 1 ? rim : 0xa8b0b4, { rz: 0.35 });
+        }
+      }
     }
     if (b.crown) {
-      bb.box((b.x0 + b.x1) / 2, b.h + KERB_H + 5, (b.z0 + b.z1) / 2, w * 0.7, 10, d * 0.7, 0x2e4a63, { tile: 16 });
-      bb.box((b.x0 + b.x1) / 2, b.h + KERB_H + 24, (b.z0 + b.z1) / 2, 1.2, 28, 1.2, 0xff4a6a);
+      bb.box(cx, top + 5, cz, w * 0.7, 10, d * 0.7, 0x2e4a63, { tile: 16 });
+      bb.box(cx, top + 24, cz, 1.2, 28, 1.2, 0xff4a6a);
     }
-    if (b.kind === 'house') bb.box((b.x0 + b.x1) / 2, b.h + KERB_H + 0.5, (b.z0 + b.z1) / 2, w + 0.8, 1, d + 0.8, 0xfaf3e6);
-  }
+  });
   const bmat = new THREE.MeshLambertMaterial({ vertexColors: true, map: win.map, emissiveMap: win.emissive, emissive: 0xffffff });
   bmat.emissiveIntensity = 0;
   const buildings = new THREE.Mesh(bb.build(), bmat); buildings.castShadow = true; buildings.receiveShadow = true; group.add(buildings);
