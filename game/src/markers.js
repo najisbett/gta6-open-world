@@ -5,8 +5,12 @@ export const markers = { n: 0, x: new Float32Array(MAXM), z: new Float32Array(MA
 export const KIND_GOAL = 0, KIND_SHOP = 1, KIND_PICKUP = 2, KIND_MISSION = 3, KIND_ENEMY = 4;
 
 const hexCache = new Map();
+// the single current mission objective; read by the 3D beacon (markerView) and the minimap arrow. Hidden when !active.
+export const waypoint = { active: false, x: 0, z: 0, hex: 0xffd24a };
+export function setWaypoint(x, z, hex) { waypoint.active = true; waypoint.x = x; waypoint.z = z; waypoint.hex = hex; }
 export function clearMarkers() {
   markers.n = 0;
+  waypoint.active = false;
 }
 export function pushMarker(x, z, hex, kind, beam) {
   if (markers.n >= MAXM) return;

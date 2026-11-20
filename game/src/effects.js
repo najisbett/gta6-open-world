@@ -78,11 +78,11 @@ export function addTyreMark(x0, z0, x1, z1, alpha) {
 }
 
 // ---- rain: streaks that follow the camera
-const RAIN = 900;
+const RAIN = 1800;
 const rainPos = new Float32Array(RAIN * 6);
 const rainGeo = new THREE.BufferGeometry();
 rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
-const rainLines = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0xbcd4e6, transparent: true, opacity: 0.45 }));
+const rainLines = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0xd6e6f5, transparent: true, opacity: 0.45 }));
 rainLines.frustumCulled = false; rainLines.visible = false;
 const rainSeed = new Float32Array(RAIN * 3);
 for (let i = 0; i < RAIN; i++) { rainSeed[i * 3] = rand() * 60 - 30; rainSeed[i * 3 + 1] = rand() * 30; rainSeed[i * 3 + 2] = rand() * 60 - 30; }
@@ -107,8 +107,8 @@ export function updateRain(camera, dt) {
     if (rainSeed[i * 3 + 1] < -8) rainSeed[i * 3 + 1] += 30;
     const x = cx + rainSeed[i * 3], y = cy + rainSeed[i * 3 + 1], z = cz + rainSeed[i * 3 + 2];
     rainPos[i * 6] = x; rainPos[i * 6 + 1] = y; rainPos[i * 6 + 2] = z;
-    rainPos[i * 6 + 3] = x - 0.05; rainPos[i * 6 + 4] = y + 0.9; rainPos[i * 6 + 5] = z;
+    rainPos[i * 6 + 3] = x - 0.18; rainPos[i * 6 + 4] = y + 1.6; rainPos[i * 6 + 5] = z;
   }
   rainGeo.attributes.position.needsUpdate = true;
-  rainLines.material.opacity = 0.15 + G.rain * 0.35;
+  rainLines.material.opacity = 0.3 + G.rain * 0.5;
 }

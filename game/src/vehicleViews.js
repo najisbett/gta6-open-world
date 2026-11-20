@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { MAX_VEHICLES } from './config.js';
 import { G } from './state.js';
-import { models, paintMats, detailMat, wreckMat, lightBarMats, POLICE_PAINT, CAB_PAINT } from './vehicleModels.js';
+import { models, paintMats, detailMat, wreckMat, lightBarMats, POLICE_PAINT, CAB_PAINT, BUS_PAINT } from './vehicleModels.js';
 
 const views = [];
 export function createVehicleViews(scene) {
@@ -30,7 +30,7 @@ export function syncVehicleViews(time) {
     if (!v.active) { w.g.visible = false; continue; }
     w.g.visible = true;
     if (w.type !== v.type) { w.type = v.type; w.body.geometry = models[v.type].body; w.det.geometry = models[v.type].detail; }
-    const paint = v.type === 'kestrel' ? POLICE_PAINT : v.type === 'taxi' ? CAB_PAINT : v.paint;
+    const paint = v.type === 'kestrel' ? POLICE_PAINT : v.type === 'taxi' ? CAB_PAINT : v.type === 'bus' ? BUS_PAINT : v.paint;
     w.body.material = v.wreck ? wreckMat : paintMats[paint];
     w.g.position.set(v.x, v.y + 0.04, v.z);
     w.g.rotation.set(v.pitch, v.h, v.roll);

@@ -12,10 +12,24 @@ import { clamp, angleDiff, wrapAngle } from './mathUtil.js';
 import { on } from './events.js';
 
 const MAX_PEDS = 44;
-const SHIRTS = [0xe4572e, 0xf3a712, 0x29b6a8, 0x4a7fd4, 0xf2e9e4, 0xd96fa8, 0x7ac74f, 0xffd166, 0x8e6bd8, 0x303744];
-const PANTS = [0x2b3a55, 0x4a4a52, 0xc2b280, 0x1f1f24, 0x7a5c44, 0x3e6a8a];
-const SKINS = [0xf1c9a5, 0xd9a07a, 0xb97a56, 0x8a5a3c, 0x5f3b2a];
-const HAIRS = [0x1d1511, 0x4a2f1c, 0xb98a4b, 0x222222, 0x8a8a8a];
+const SHIRTS = [0xe4572e, 0xf3a712, 0x29b6a8, 0x4a7fd4, 0xf2e9e4, 0xd96fa8, 0x7ac74f, 0xffd166, 0x8e6bd8, 0x303744, 0xc0392b, 0x1abc9c, 0xe67e22, 0x2c3e8f, 0xa3d9c9, 0xb5651d, 0x7d3c98, 0xf5b7b1];
+const PANTS = [0x2b3a55, 0x4a4a52, 0xc2b280, 0x1f1f24, 0x7a5c44, 0x3e6a8a, 0x6b2d3a, 0x556b2f, 0xd8d0c0, 0x39414f];
+const SKINS = [0xf6d6bc, 0xf1c9a5, 0xd9a07a, 0xc68a62, 0xb97a56, 0x8a5a3c, 0x6d4430, 0x5f3b2a];
+const HAIRS = [0x1d1511, 0x4a2f1c, 0xb98a4b, 0x222222, 0x8a8a8a, 0x7a3b1d, 0xd8c08a, 0x3b2a4a];
+// Caps/hats reuse the hair mesh, so a hat is just a bright colour on it.
+const HATS = [0xc0392b, 0x2c3e8f, 0xf2e9e4, 0x1f1f24, 0xf3a712, 0x29b6a8];
+// Nudge a colour lighter or darker so no two neighbours in the same palette look identical.
+function jitter(hex, amt) {
+  const k = 1 + (rand() - 0.5) * 2 * amt;
+  const r = clamp(Math.round(((hex >> 16) & 255) * k), 0, 255), g = clamp(Math.round(((hex >> 8) & 255) * k), 0, 255), b = clamp(Math.round((hex & 255) * k), 0, 255);
+  return (r << 16) | (g << 8) | b;
+}
+// One outfit for slot: palette pair (or a free pick), jitter, an optional hat and a body-height scale.
+function dress(h, shirt, pants) {
+  const hat = rand() < 0.22;
+  setHumanColors(h.id + 1, jitter(shirt, 0.14), jitter(pants, 0.12), pick(SKINS), hat ? pick(HATS) : pick(HAIRS));
+  h.sc = 0.92 + rand() * 0.17;
+}
 // Body palettes per pedestrian group (chosen by the district they spawn in): [shirt, pants] pairs.
 const GROUP_PALETTES = {
   office: [[0xf2f2f2, 0x1f1f24], [0x9fb8d6, 0x2b3a55], [0x303744, 0x4a4a52], [0xe8dcc8, 0x3a3a40]],
@@ -31,7 +45,7 @@ const _o = { x: 0, z: 0 };
 
 function applyGroupPalette(h, blkType) {
   const pal = pick(GROUP_PALETTES[DISTRICT_GROUP[blkType]] || GROUP_PALETTES.casual);
-  setHumanColors(h.id + 1, pal[0], pal[1], pick(SKINS), pick(HAIRS));
+  if (rand() < 0.3) dress(h, pick(SHIRTS), pick(PANTS)); else dress(h, pal[0], pal[1]);
 }
 
 function cornerPos(blk, k, off, out) {
@@ -43,7 +57,7 @@ function cornerPos(blk, k, off, out) {
 export function resetHumanSlot(h, kind) {
   h.active = true; h.kind = kind; h.state = S_WALK; h.vx = h.vz = 0; h.hp = h.hpMax = 40; h.panic = 0; h.timer = 0; h.cool = 0; h.armed = false; h.fadeT = 0;
   h.cash = 0; h.mission = false; h.crossing = false; h.walk = rand() * 6; h.y = 0.22;
-  setHumanColors(h.id + 1, pick(SHIRTS), pick(PANTS), pick(SKINS), pick(HAIRS));
+  dress(h, pick(SHIRTS), pick(PANTS));
 }
 
 function spawnPed(x, z, blk, k) {

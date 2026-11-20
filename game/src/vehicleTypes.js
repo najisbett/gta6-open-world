@@ -9,6 +9,9 @@ export const VTYPES = {
   hauler: { name: 'Hauler Van', len: 5.3, wid: 2.1, accel: 11, top: 30, grip: 6.2, steer: 0.48, hp: 150, mass: 1.7, h: 2.3 },
   taxi: { name: 'Sunbird Cab', len: 4.6, wid: 1.9, accel: 14, top: 35, grip: 7.5, steer: 0.55, hp: 100, mass: 1.0, h: 1.4 },
   kestrel: { name: 'Kestrel Cruiser', len: 4.8, wid: 1.95, accel: 21, top: 47, grip: 7.0, steer: 0.52, hp: 130, mass: 1.3, h: 1.4 },
+  bus: { name: 'Transit Bus', len: 9.4, wid: 2.5, accel: 6.5, top: 22, grip: 5.2, steer: 0.36, hp: 260, mass: 3.6, h: 3.2, cruiseMax: 13 },
+  pickup: { name: 'Ranger Pickup', len: 5.3, wid: 2.0, accel: 14, top: 38, grip: 6.4, steer: 0.5, hp: 130, mass: 1.4, h: 1.8 },
+  hatch: { name: 'Pip Hatchback', len: 3.7, wid: 1.74, accel: 15, top: 33, grip: 8.0, steer: 0.6, hp: 80, mass: 0.7, h: 1.5 },
 };
-export const TRAFFIC_TYPES = ['marlin', 'marlin', 'marlin', 'dune', 'hauler', 'taxi', 'vesper'];
-export const TYPE_ORDER = ['marlin', 'vesper', 'dune', 'hauler', 'taxi', 'kestrel'];
+export const TRAFFIC_TYPES = ['marlin', 'marlin', 'marlin', 'dune', 'hauler', 'taxi', 'vesper', 'hatch', 'hatch', 'pickup', 'pickup', 'bus'];
+export const TYPE_ORDER = ['marlin', 'vesper', 'dune', 'hauler', 'taxi', 'kestrel', 'bus', 'pickup', 'hatch'];

@@ -23,6 +23,7 @@ import { updateAudio, bindAudioEvents, initAudio } from './audio.js';
 import { streamTraffic } from './traffic.js';
 import { streamPeds } from './pedestrians.js';
 import { seed } from './rng.js';
+import { initGrade, updateGrade } from './weather.js';
 
 const canvas = document.getElementById('view');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
@@ -51,6 +52,7 @@ function boot() {
   createMarkerViews(scene);
   addEffectsToScene(scene);
   initInput(canvas);
+  initGrade();
   initHud();
   resize();
   const shot = new URLSearchParams(location.search).get('shot');
@@ -73,6 +75,7 @@ function boot() {
 function renderFrame(dt) {
   updateCamera(camera, dt);
   updateSky(camera, G.hour, camera.position.x, camera.position.z, G.rain);
+  updateGrade(G.hour, G.rain);
   updateRain(camera, dt);
   syncVehicleViews(G.t);
   syncHumanViews();

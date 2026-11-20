@@ -3,7 +3,7 @@
 import { G, player, AI_NONE, H_GANG, H_PED, S_IDLE, S_DEAD, toast } from './state.js';
 import { MISSIONS } from './missionData.js';
 import { city, groundHeight } from './cityLayout.js';
-import { clearMarkers, pushMarker, KIND_MISSION, KIND_GOAL, KIND_ENEMY } from './markers.js';
+import { clearMarkers, pushMarker, setWaypoint, KIND_MISSION, KIND_GOAL, KIND_ENEMY } from './markers.js';
 import { say, dialogBusy, stepDialogue } from './dialogue.js';
 import { spawnVehicle } from './vehicles.js';
 import { resetHumanSlot } from './pedestrians.js';
@@ -139,31 +139,32 @@ export function stepMissions(dt) {
     if (!nm) { if (giverId >= 0) { G.humans[giverId].active = false; giverId = -1; } return; }
     if (dialogBusy()) return;
     const g = nm.giver();
-    pushMarker(g.x, g.z, 0xffd24a, KIND_MISSION, true);
+    pushMarker(g.x, g.z, 0xffd24a, KIND_MISSION, true); setWaypoint(g.x, g.z, 0xffd24a);
     keepGiverNpc(g);
     if (G.mode === 'play' && near(g, 3.3) && !G.dialog.active) startMission(MISSIONS.indexOf(nm));
     return;
   }
-  if (M.step < 0) { const g = m.giver(); pushMarker(g.x, g.z, 0xffd24a, KIND_MISSION, true); }
+  if (M.step < 0) { const g = m.giver(); pushMarker(g.x, g.z, 0xffd24a, KIND_MISSION, true); setWaypoint(g.x, g.z, 0xffd24a); }
   if (!stepReady || M.step < 0 || dialogBusy()) return;
   const s = m.steps[M.step];
   if (s.t === 'steal') {
     const v = G.vehicles[spawned.car];
     if (!v || v.wreck) { failMission('the car was destroyed'); return; }
-    pushMarker(v.x, v.z, 0xffd24a, KIND_GOAL, true);
+    pushMarker(v.x, v.z, 0xffd24a, KIND_GOAL, true); setWaypoint(v.x, v.z, 0xffd24a);
     if (player.veh === spawned.car) { if (s.wanted) setWanted(s.wanted); beginStep(M.step + 1); }
   } else if (s.t === 'drive') {
     const at = s.at();
-    pushMarker(at.x, at.z, 0x38e8d0, KIND_GOAL, true);
+    pushMarker(at.x, at.z, 0x38e8d0, KIND_GOAL, true); setWaypoint(at.x, at.z, 0x38e8d0);
     G.objective.text = inVehicle() ? s.text : 'Get back in a car';
     if (inVehicle() && near(at, s.r)) beginStep(M.step + 1);
   } else if (s.t === 'goto') {
     const at = s.at();
-    pushMarker(at.x, at.z, 0x38e8d0, KIND_GOAL, true);
+    pushMarker(at.x, at.z, 0x38e8d0, KIND_GOAL, true); setWaypoint(at.x, at.z, 0x38e8d0);
     if (near(at, s.r) && (s.vehicleOk || !inVehicle())) beginStep(M.step + 1);
   } else if (s.t === 'kill') {
-    let left = 0;
-    for (const id of spawned.gang) { const h = G.humans[id]; if (h.active && h.state !== S_DEAD) { left++; pushMarker(h.x, h.z, 0xff4a4a, KIND_ENEMY, false); } }
+    let left = 0, nd = 1e18, nx = 0, nz = 0;
+    for (const id of spawned.gang) { const h = G.humans[id]; if (h.active && h.state !== S_DEAD) { left++; pushMarker(h.x, h.z, 0xff4a4a, KIND_ENEMY, false); const d = (h.x - player.x) ** 2 + (h.z - player.z) ** 2; if (d < nd) { nd = d; nx = h.x; nz = h.z; } } }
+    if (left > 0) setWaypoint(nx, nz, 0xff4a4a);
     G.objective.text = s.text + ' (' + (killsNeeded - left) + '/' + killsNeeded + ')';
     if (s.wanted && !s.alarm && left < killsNeeded) { s.alarm = true; setWanted(s.wanted); }
     if (left === 0) { s.alarm = false; beginStep(M.step + 1); }
@@ -173,7 +174,7 @@ export function stepMissions(dt) {
     timeLeft -= dt;
     G.objective.timer = fmt(Math.max(0, timeLeft));
     G.objective.text = s.text + ' (' + cp + '/' + pts.length + ')';
-    pushMarker(p.x, p.z, 0xffd24a, KIND_GOAL, true);
+    pushMarker(p.x, p.z, 0xffd24a, KIND_GOAL, true); setWaypoint(p.x, p.z, 0xffd24a);
     if (cp + 1 < pts.length) pushMarker(pts[cp + 1].x, pts[cp + 1].z, 0x8a8f99, KIND_GOAL, false);
     if (near(p, 8)) { cp++; emit('pickup'); toast('Envelope collected', 1.5); if (cp >= pts.length) { G.objective.timer = ''; beginStep(M.step + 1); } }
     else if (timeLeft <= 0) failMission('time ran out');

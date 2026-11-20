@@ -28,7 +28,7 @@ export function spawnVehicle(type, x, z, h, ai, paint) {
   v.active = true; v.type = type; v.t = t; v.paint = paint; v.x = x; v.z = z; v.y = groundHeight(x, z); v.h = h;
   v.vx = v.vz = v.yaw = v.pitch = v.roll = 0; v.steer = v.throttle = v.brake = v.hb = 0; v.hp = t.hp; v.ai = ai; v.driver = ai === AI_NONE || ai === AI_PARKED ? 0 : 2;
   v.stuck = v.reverse = v.slip = v.speed = v.fire = 0; v.wreck = false; v.keep = false; v.tune = 0; v.mission = false; v.siren = false; v.boom = 0;
-  v.hasMark = false; v.wasOnKerb = false; v.lastHit = 0; v.cruise = 14 + rand() * 8; v.spawnT = G.t;
+  v.hasMark = false; v.wasOnKerb = false; v.lastHit = 0; v.cruise = Math.min(t.cruiseMax || 99, 14 + rand() * 8); v.spawnT = G.t;
   return v;
 }
 

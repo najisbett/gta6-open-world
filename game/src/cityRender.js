@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { C, N, WORLD, KERB_H, HALF_ROAD } from './config.js';
 import { city, districtOf } from './cityLayout.js';
 import { MeshBuilder } from './meshBuilder.js';
+import { makeWetRoad } from './weather.js';
 import { makeWindowTextures, makeRoadTexture, makeIntersectionTexture, makeSandTexture, makeWaterTexture, makeSignAtlas, signUv } from './proceduralTextures.js';
 
 export const cityView = { buildingMat: null, signMat: null, lampMat: null, lightX: null, lightZ: null, water: null, waterTex: null };
@@ -82,7 +83,7 @@ export function buildCityMeshes(scene) {
 
   // ---- roads
   const roadTex = makeRoadTexture();
-  const roadMat = new THREE.MeshLambertMaterial({ map: roadTex });
+  const roadMat = makeWetRoad(new THREE.MeshPhongMaterial({ map: roadTex, specular: 0x141414, shininess: 14 }));
   const rb = new MeshBuilder();
   const R = HALF_ROAD, L = WORLD + 2 * R;
   for (let i = 0; i <= N; i++) {
@@ -104,7 +105,7 @@ export function buildCityMeshes(scene) {
   const roadsX = new THREE.Mesh(rb2.build(), roadMat); roadsX.receiveShadow = true; group.add(roadsX);
   const ib = new MeshBuilder();
   for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) ib.floorQuad(i * C - R, j * C - R, i * C + R, j * C + R, 0.03, 0xffffff, 0, 0, 1, 1);
-  const inter = new THREE.Mesh(ib.build(), new THREE.MeshLambertMaterial({ map: makeIntersectionTexture() })); inter.receiveShadow = true; group.add(inter);
+  const inter = new THREE.Mesh(ib.build(), makeWetRoad(new THREE.MeshPhongMaterial({ map: makeIntersectionTexture(), specular: 0x141414, shininess: 14 }))); inter.receiveShadow = true; group.add(inter);
 
   // ---- sidewalk slabs and lot ground
   const sb = new MeshBuilder();

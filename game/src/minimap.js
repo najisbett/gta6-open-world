@@ -3,7 +3,7 @@
 import { C, N, WORLD, HALF_ROAD } from './config.js';
 import { city } from './cityLayout.js';
 import { G, player, AI_POLICE, H_COP, H_GANG, S_DEAD } from './state.js';
-import { markers, KIND_SHOP, KIND_PICKUP } from './markers.js';
+import { markers, waypoint, KIND_SHOP, KIND_PICKUP } from './markers.js';
 
 const SIZE = 440, R = SIZE / 2, MARGIN = 60, PX = 2;
 let mapCanvas = null, ctx = null;
@@ -66,6 +66,22 @@ export function drawMinimap(canvas) {
   for (let i = 0; i < markers.n; i++) {
     const k = markers.kind[i];
     blip(g, markers.x[i], markers.z[i], markers.color[i], k === KIND_PICKUP ? 5 : k === KIND_SHOP ? 8 : 10, k !== KIND_PICKUP);
+  }
+  // mission waypoint: an arrow pinned to the rim pointing at the objective, or a chevron over it when it is on the radar
+  if (waypoint.active) {
+    toLocal(waypoint.x, waypoint.z, _l);
+    const d = Math.hypot(_l.x, _l.y), lim = R - 16, inside = d <= lim;
+    const k = inside ? 1 : lim / d;
+    g.save();
+    g.translate(R + _l.x * k, R + _l.y * k);
+    g.rotate(inside ? Math.PI : Math.atan2(_l.y, _l.x) + Math.PI / 2); // tip points outward (or down at the objective)
+    const col = '#' + waypoint.hex.toString(16).padStart(6, '0');
+    const sz = inside ? 12 : 15;
+    g.beginPath(); g.moveTo(0, -sz - 3); g.lineTo(sz + 3, sz); g.lineTo(0, sz * 0.35); g.lineTo(-sz - 3, sz); g.closePath();
+    g.fillStyle = '#000'; g.fill();
+    g.beginPath(); g.moveTo(0, -sz); g.lineTo(sz, sz - 2); g.lineTo(0, sz * 0.2); g.lineTo(-sz, sz - 2); g.closePath();
+    g.fillStyle = col; g.fill();
+    g.restore();
   }
   // police
   const flash = Math.floor(G.t * 4) % 2 === 0;

@@ -19,7 +19,7 @@ import { stepShops } from './shops.js';
 import { dialogBusy } from './dialogue.js';
 import { respawnPlayer } from './player.js';
 import { updateSignalColours } from './cityRender.js';
-import { rand } from './rng.js';
+import { stepWeather } from './weather.js';
 
 let streamClock = 0;
 export const focus = { x: 384, z: 330 };
@@ -61,10 +61,7 @@ export function simStep(dt) {
     streamPeds(focus.x, focus.z, false);
   }
   if (!G.shot) {
-    G.hour = (G.hour + dt / 36) % 24;
-    G.weatherTimer -= dt;
-    if (G.weatherTimer <= 0) { G.rainTarget = G.rainTarget > 0 ? 0 : (rand() < 0.35 ? 0.4 + rand() * 0.6 : 0); G.weatherTimer = 70 + rand() * 120; }
-    G.rain += (G.rainTarget - G.rain) * Math.min(1, dt * 0.25);
+    stepWeather(dt); // deterministic: hour advances by dt, rain is a fixed-seed function of G.t
   }
   updateSignalColours(G.t);
 }

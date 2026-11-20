@@ -12,6 +12,7 @@ import { updateCamera } from './cameraRig.js';
 import { city } from './cityLayout.js';
 import { startNewGame } from './gameFlow.js';
 import { startMission } from './missions.js';
+import { applyShotWeather } from './weather.js';
 
 // put a civilian car on a road lane at a fixed spot, already moving, so the frame always has neighbours
 function trafficCar(type, x, z, dir, speed, paint) {
@@ -32,7 +33,6 @@ function settleCamera(camera, n) {
 const SCENES = {
   // player in a stolen Vesper GT on a boulevard: oncoming traffic, a crowd on both sidewalks, one wanted star
   cover(camera) {
-    G.hour = 16.9;
     const v = spawnVehicle('vesper', 330, 323.8, Math.PI / 2, AI_NONE, 0);
     placePlayer(330, 323.8, Math.PI / 2);
     v.vx = 18; enterVehicle(v.id);
@@ -45,6 +45,9 @@ const SCENES = {
     trafficCar('taxi', 428, 316.2, 2, 11, 0);
     trafficCar('dune', 470, 316.2, 2, 12, 5);
     trafficCar('hauler', 402, 323.8, 0, 9, 3);
+    trafficCar('bus', 452, 323.8, 0, 8, 0);
+    trafficCar('pickup', 392, 316.2, 2, 12, 1);
+    trafficCar('hatch', 505, 316.2, 2, 11, 7);
     setWanted(1);
     G.shot.controls = (K) => { K.fwd = 0.7; K.right = 0; };
     runSteps(150);
@@ -53,7 +56,6 @@ const SCENES = {
 
   // a three-star pursuit seen from a low front-quarter camera so the player's car and the cruisers share the frame
   chase(camera) {
-    G.hour = 17.6;
     const lane = 7 * 64 - 3.8;
     const v = spawnVehicle('vesper', lane, 200, 0, AI_NONE, 2);
     placePlayer(lane, 200, 0);
@@ -83,7 +85,6 @@ const SCENES = {
 
   // on foot in the street beside the gun shop: aiming, full HUD, bars, weapon, one star, a busy road and sidewalk
   hud(camera) {
-    G.hour = 15.4;
     const p = city.places.guns;
     placePlayer(p.x - 6, p.z + 5.4, Math.PI / 2);
     G.cam.yaw = Math.PI / 2 + 0.22; G.cam.pitch = 0.17;
@@ -100,9 +101,9 @@ const SCENES = {
 
   // Dessa at the diner with the first mission's dialogue open and the gold marker beam ahead of the player
   mission(camera) {
-    G.hour = 17.7;
     const d = city.places.diner;
     startNewGame();
+    applyShotWeather('mission'); // startNewGame resets the clock
     G.shot.controls = (K) => { K.fwd = 0; K.right = 0; };
     G.player.money = 4280;
     placePlayer(d.x - 3, d.z - 7.5, 0.1);
@@ -125,5 +126,6 @@ export function setupShot(name, camera) {
   G.shot = { name, controls: null };
   G.mode = 'play';
   G.player.money = 4280;
+  applyShotWeather(SCENES[name] ? name : 'cover'); // forces this shot's hour and rain (see weather.js)
   (SCENES[name] || SCENES.cover)(camera);
 }

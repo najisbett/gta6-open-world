@@ -17,6 +17,7 @@ const parts = {};
 const _base = new THREE.Matrix4(), _loc = new THREE.Matrix4(), _m = new THREE.Matrix4();
 const _pos = new THREE.Vector3(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _s = new THREE.Vector3(1, 1, 1), _zero = new THREE.Matrix4().makeScale(0, 0, 0);
 const _c = new THREE.Color();
+const _bs = new THREE.Vector3(1, 1, 1);
 
 export function createHumanoidViews(scene) {
   parts.leg = [mk(0.2, 0.85, 0.22), mk(0.2, 0.85, 0.22)];
@@ -54,10 +55,11 @@ function limb(mesh, slot, px, pivotY, len, ang) {
   put(mesh, slot, px, pivotY - Math.cos(ang) * len / 2, -Math.sin(ang) * len / 2, ang);
 }
 
-function drawPerson(slot, x, y, z, h, walk, swing, armed, aiming, dead) {
+function drawPerson(slot, x, y, z, h, walk, swing, armed, aiming, dead, sc = 1) {
   _pos.set(x, y + (dead ? 0.14 : 0), z);
   _q.setFromEuler(_e.set(dead ? -Math.PI / 2 : 0, h, 0, 'YXZ'));
-  _base.compose(_pos, _q, _s);
+  _bs.set(sc, sc, sc);
+  _base.compose(_pos, _q, _bs);
   const a = Math.sin(walk) * swing;
   limb(parts.leg[0], slot, -0.11, 0.85, 0.85, a);
   limb(parts.leg[1], slot, 0.11, 0.85, 0.85, -a);
@@ -96,7 +98,7 @@ export function syncHumanViews() {
     const h = G.humans[i];
     if (!h.active) { hide(i + 1); continue; }
     const dead = h.state === S_DEAD;
-    drawPerson(i + 1, h.x, h.y, h.z, h.h, h.walk, dead ? 0 : h.state === S_FLEE ? 0.9 : 0.55, h.armed, h.state === S_ATTACK, dead);
+    drawPerson(i + 1, h.x, h.y, h.z, h.h, h.walk, dead ? 0 : h.state === S_FLEE ? 0.9 : 0.55, h.armed, h.state === S_ATTACK, dead, h.sc || 1);
   }
   for (const m of [parts.torso, parts.head, parts.hair, parts.gun, parts.leg[0], parts.leg[1], parts.arm[0], parts.arm[1]]) m.instanceMatrix.needsUpdate = true;
 }

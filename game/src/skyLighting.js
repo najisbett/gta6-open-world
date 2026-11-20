@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { clamp, smooth } from './mathUtil.js';
 import { cityView } from './cityRender.js';
 import { decor } from './streetDecor.js';
+import { updateWet } from './weather.js';
 
 // hour, sky top, horizon, sun colour, sun intensity, hemisphere sky, hemisphere ground, hemisphere intensity
 const KEYS = [
@@ -96,5 +97,6 @@ export function updateSky(camera, hour, fx, fz, rain) {
   cityView.lampMat.color.setRGB(0.35 + n * 0.65, 0.35 + n * 0.55, 0.3 + n * 0.1);
   if (decor.neonMat) decor.neonMat.color.setRGB(0.82 + n * 0.18, 0.82 + n * 0.18, 0.82 + n * 0.18);
   cityView.signMat.color.setRGB(0.75 + n * 0.25, 0.75 + n * 0.25, 0.75 + n * 0.25);
+  updateWet(rain, n, sky.fog.color);
   if (cityView.waterTex) { cityView.waterTex.offset.x = (hour * 60) % 1; cityView.water.material.color.copy(out.hor).lerp(cB.setHex(0x1aa3b8), 0.6); }
 }
